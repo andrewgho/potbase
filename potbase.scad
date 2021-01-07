@@ -4,62 +4,43 @@
 pot_length = 61.91;    // 2 7/16" measured
 pot_thickness = 7.94;  //   5/16" measured
 
-margin = 4;            // space around pot and lip
-thickness = 2;         // base thickness without edge radius
-edge_radius = 3;       // apply Minkowski sphere of this radius to final shape
-
-bottom_length = pot_length + (margin * 2);
-half_length = bottom_length / 2;
-lip_length = 12;
-lip_angle = 60;
+margin = 1;            // space around pot and lip
+thickness = 1;         // base thickness without edge radius
+radius = 3;            // round base with sphere of this radius
+height = 6;            // overwall base height, including base and lip
 
 e = 0.1;
-$fn = 45;
+e2 = e * 2;
+$fn = 30;
 
-// Square bottom plate
-module bottom() {
-  translate([-half_length, -half_length])
-    cube([bottom_length, bottom_length, thickness]);
-}
+inner_length = pot_length + (2 * margin);
+outer_length = inner_length + (2 * thickness);
+inner_height = height - thickness;
 
-// One full lip with two angle pieces
-module lip_x() {
-  translate([-half_length, half_length, 0])
-    rotate(lip_angle, [1, 0, 0])
-    cube([bottom_length, lip_length, thickness]);
-  module corner() {
-    translate([half_length, half_length, 0]) {
-      hull() {
-        rotate(lip_angle, [1, 0, 0])
-          cube([e, lip_length, thickness]);
-        rotate(-45, [0, 0, 1])
-          rotate(lip_angle, [1, 0, 0])
-          cube([e, lip_length, thickness]);
-      }
+// Cube with a spherically rounded base
+module rounded_bottom_cube(len, height, radius) {
+  // Repeat children for each of four corners
+  module foreach_corner(len) {
+    translate([ len / 2,  len / 2, 0]) children();
+    translate([-len / 2,  len / 2, 0]) children();
+    translate([-len / 2, -len / 2, 0]) children();
+    translate([ len / 2, -len / 2, 0]) children();
+  }
+  difference() {
+    hull() {
+      sphere_offset = len - (2 * radius);
+      translate([0, 0, radius]) foreach_corner(sphere_offset) sphere(r = radius);
+      translate([0, 0, height]) foreach_corner(sphere_offset) sphere(r = radius);
     }
-  }
-  corner();
-  mirror([1, 0, 0]) corner();
-}
-
-// Rotate lip_x() 90 degrees
-module lip_y() {
-  rotate(90, [0, 0, 1]) lip_x();
-}
-
-// Assemble all parts of the base, pre-Minkowski
-module square_base() {
-  union() {
-    bottom();
-    lip_x();
-    lip_y();
-    mirror([0, 1, 0]) lip_x();
-    mirror([1, 0, 0]) lip_y();
+    cutoff_length = len + e2;
+    cutoff_offset = cutoff_length / 2;
+    translate([-cutoff_offset, -cutoff_offset, height])
+      cube([cutoff_length, cutoff_length, radius + e]);
   }
 }
 
-// Smooth edges with spherical transform
-minkowski() {
-  square_base();
-  sphere(r = edge_radius);
+difference() {
+  rounded_bottom_cube(outer_length, height, radius);
+  translate([0, 0, thickness]) rounded_bottom_cube(inner_length, height, radius);
 }
+
