@@ -5,9 +5,9 @@ pot_length = 61.91;    // 2 7/16" measured
 pot_thickness = 7.94;  //   5/16" measured
 
 margin = 1;            // space around pot and lip
-thickness = 1;         // base thickness without edge radius
-radius = 3;            // round base with sphere of this radius
-height = 6;            // overwall base height, including base and lip
+thickness = 3;         // base thickness without edge radius
+radius = 4;            // round base with sphere of this radius
+height = 10;           // overwall base height, including base and lip
 
 e = 0.1;
 e2 = e * 2;
@@ -43,4 +43,3 @@ difference() {
   rounded_bottom_cube(outer_length, height, radius);
   translate([0, 0, thickness]) rounded_bottom_cube(inner_length, height, radius);
 }
-
